@@ -3,364 +3,260 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎮 解任務｜婚禮版</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<title>🎵 婚禮互動任務 Final Demo</title>
+
+<!-- =========================================================
+<======== 檔案用途：婚禮互動任務（六關主區 + 排行榜 + 地圖 完整版） ======== >
+========================================================= -->
+
 <style>
-/* 🌟 全域樣式 */
+/* ---------------------------------------------
+   //* --------配色／字級設定區（可自行調整；新增）--------*//
+--------------------------------------------- */
+:root {
+  --font-base: 22px;    /* 主要說明文字大小 */
+  --font-lg: 30px;      /* 區塊標題字體大小 */
+  --font-xl: 40px;      /* 主標題字體大小 */
+  --muted: #6b7280;     /* 次要說明文字顏色 */
+  --ink: #111827;       /* 主文字顏色 */
+  --card-w: 880px;      /* 主卡片寬度 */
+  --top-banner: 120px;  /* 上半主活動區高度 */
+}
+
+/* 主背景（柔金漸層） */
 body {
   margin: 0;
   font-family: 'Noto Sans TC', sans-serif;
-  background: linear-gradient(135deg, #fffaf4, #ffe8d6);
-  color: #333;
+  background: linear-gradient(180deg, rgba(247, 216, 104, 1) 0%, rgba(209, 187, 144, 1) 50%, rgba(184, 169, 169, 1) 100%);
   overflow: hidden;
+  color: var(--ink);
 }
+
+/* 主容器 */
 #app {
   display: flex;
+  flex-direction: column;
   height: 100vh;
 }
 
-/* 左主區 */
-#mainArea {
-  flex: 2;
-  padding: 20px 40px;
+/* 上半：婚禮主活動卡片 */
+#main-area {
+  flex: 1;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
-h1 {
-  background: linear-gradient(90deg, #d4af37, #ff9a9e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-size: 2.2em;
-  margin-bottom: 10px;
-}
-.step-card {
-  width: 90%;
-  max-width: 600px;
-  padding: 30px;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-radius: 20px;
+
+.main-card {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 0 20px rgba(255,255,255,0.5);
   text-align: center;
-  transition: all 0.4s ease;
+  width: var(--card-w);
+  padding: 30px 20px;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 1.2s ease-in-out;
 }
-.step-card.hidden { display: none; }
-.step-card h2 {
-  color: #b8860b;
-  margin-bottom: 15px;
+.main-card h1 {
+  font-size: var(--font-xl);
+  margin: 10px 0;
 }
-.step-card button {
-  background: linear-gradient(90deg, #ffd700, #ffb347);
-  border: none;
-  border-radius: 25px;
-  padding: 10px 24px;
-  font-size: 1.1em;
-  cursor: pointer;
-  color: #fff;
-  font-weight: bold;
-  transition: 0.3s;
+.main-card p {
+  font-size: var(--font-base);
+  color: var(--muted);
 }
-.step-card button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 10px #ffb347;
+@keyframes fadeIn {
+  from {opacity:0; transform:translateY(20px);}
+  to {opacity:1; transform:translateY(0);}
 }
 
-/* 右區塊：排行榜 + 地圖 */
-#rightPanel {
-  flex: 1;
+/* 下半：排行榜＋地圖 */
+#bottom-area {
   display: flex;
-  flex-direction: column;
-  border-left: 3px solid #f2d5a3;
+  height: 45%;
+  border-top: 4px solid #fff;
 }
 
 /* 排行榜 */
 #leaderboard {
   flex: 1;
-  background: #fff8f0;
-  padding: 15px;
-  overflow-y: auto;
-  border-bottom: 3px solid #f2d5a3;
-}
-#leaderboard h3 {
-  text-align: center;
-  color: #c68c1f;
-  margin-top: 0;
-}
-.leader-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 5px 10px;
-  border-bottom: 1px dashed #f2d5a3;
-}
-.leader-self {
-  background: rgba(255, 215, 0, 0.2);
-  border-radius: 10px;
-  font-weight: bold;
-}
-
-/* 名次浮動提示 */
-#rankChange {
-  position: fixed;
-  top: 20px;
-  right: 50%;
-  transform: translateX(50%);
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #ffd700;
+  background: linear-gradient(180deg,rgba(169,169,235,1) 0%, rgba(158,224,255,1) 77%, rgba(0,212,255,1) 100%);
   padding: 10px 20px;
-  border-radius: 20px;
-  font-weight: bold;
-  display: none;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-  z-index: 1000;
-  animation: fadeInOut 2s ease forwards;
+  overflow-y: auto;
 }
-@keyframes fadeInOut {
-  0% {opacity: 0; transform: translate(-50%, -10px);}
-  10% {opacity: 1; transform: translate(-50%, 0);}
-  90% {opacity: 1; transform: translate(-50%, 0);}
-  100% {opacity: 0; transform: translate(-50%, -10px);}
+#leaderboard h2 {
+  text-align: center;
+  font-size: var(--font-lg);
+  color: #111;
+  margin: 5px 0 10px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 18px;
+  color: #111;
+}
+th, td {
+  text-align: center;
+  padding: 6px;
+}
+th {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.rank-medal {
+  font-size: 24px;
+}
+.ellipsis td {
+  text-align: center;
+  color: #555;
+  font-style: italic;
+}
+.flash {
+  animation: flash 0.8s ease-in-out;
+}
+@keyframes flash {
+  0% { background-color: #fffacd; }
+  100% { background-color: transparent; }
 }
 
 /* 地圖 */
 #map {
   flex: 1;
-  height: 50%;
+  height: 100%;
+  border-left: 4px solid #fff;
 }
 .leaflet-container {
-  border-radius: 0 0 10px 10px;
-}
-
-/* 漸層動畫光圈 */
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);}
-  70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0);}
-  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);}
-}
-.glow {
-  animation: pulse 0.6s ease-out;
+  width: 100%;
+  height: 100%;
 }
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="mainArea">
-    <h1>🎵 婚禮互動任務</h1>
-    <div id="stepsContainer">
-      <div id="step1" class="step-card">
-        <h2>1️⃣ 簽到任務</h2>
-        <p>嗶 NFC 或點下方按鈕簽到</p>
-        <button onclick="nextStep(1)">簽到</button>
-      </div>
-      <div id="step2" class="step-card hidden">
-        <h2>2️⃣ 簽名任務</h2>
-        <p>上傳你的簽名或照片（此版本暫不需上傳）</p>
-        <button onclick="nextStep(2)">完成簽名</button>
-      </div>
-      <div id="step3" class="step-card hidden">
-        <h2>3️⃣ 找招待</h2>
-        <p>找招待確認後完成任務</p>
-        <button onclick="nextStep(3)">完成找招待</button>
-      </div>
-      <div id="step4" class="step-card hidden">
-        <h2>4️⃣ 找新人拍照</h2>
-        <p>與新人合照完成任務</p>
-        <button onclick="nextStep(4)">完成拍照</button>
-      </div>
-      <div id="step5" class="step-card hidden">
-        <h2>5️⃣ 相本桌拼圖</h2>
-        <p>完成拼圖挑戰！</p>
-        <button onclick="nextStep(5)">完成拼圖</button>
-      </div>
-      <div id="step6" class="step-card hidden">
-        <h2>6️⃣ 四選一測驗</h2>
-        <p>完成四題婚禮問答</p>
-        <button onclick="nextStep(6)">完成測驗</button>
-      </div>
-      <div id="done" class="step-card hidden">
-        <h2>🎉 恭喜完成所有任務！</h2>
-        <p>感謝參與婚禮互動～</p>
-      </div>
+  <!-- 上半主活動區 -->
+  <div id="main-area">
+    <div class="main-card">
+      <h1>🎵 婚禮互動任務</h1>
+      <p>🎉 恭喜完成所有任務！<br>可前往排行榜查看名次或探索地圖中的彩蛋 🎁</p>
     </div>
   </div>
 
-  <div id="rightPanel">
+  <!-- 下半：排行榜 + 地圖 -->
+  <div id="bottom-area">
     <div id="leaderboard">
-      <h3>🏆 排行榜</h3>
-      <div id="leaderList"></div>
+      <h2>🏆 排行榜</h2>
+      <table>
+        <thead><tr><th>名次</th><th>暱稱</th><th>分數</th></tr></thead>
+        <tbody id="rank-body"></tbody>
+      </table>
     </div>
     <div id="map"></div>
   </div>
 </div>
 
-<div id="rankChange"></div>
-
+<!-- Leaflet 套件 -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
+// ----------------------
+// 🏆 排行榜模擬邏輯
+// ----------------------
 
-/* === 🎮 NFT × NFC 互動任務：JS 主程式 === */
+// 模擬初始玩家資料
+let players = [
+  {name: "Tester", score: 100},
+  {name: "Alice", score: 95},
+  {name: "Bob", score: 90},
+  {name: "Carol", score: 85},
+  {name: "David", score: 80},
+  {name: "Eve", score: 75},
+  {name: "Frank", score: 70},
+  {name: "Grace", score: 65},
+  {name: "Heidi", score: 60},
+  {name: "Ivan", score: 55}
+];
 
-const API_BASE = "https://script.google.com/macros/s/AKfycbxWhBXokjK37fAJVmxsP0ho0CKaj6JAm6150C4HLfmFJ89v2xGwGhYR85yjwPaXcxU6og/exec";
-const nickname = "Tester";
-let currentStep = 1;
-let lastRank = null;
-let sounds = {};
-let map, markers = {};
+// 排行榜渲染函式
+function renderLeaderboard() {
+  players.sort((a, b) => b.score - a.score);
+  const tbody = document.getElementById("rank-body");
+  tbody.innerHTML = "";
 
-// 🕹️ 初始化
-window.addEventListener("DOMContentLoaded", async () => {
-  preloadSounds();
-  initMap();
-  initLeaderboard();
-  const saved = localStorage.getItem("wedding_progress");
-  if (saved) currentStep = parseInt(saved);
-  showStep(currentStep);
-  await signin();
-  loopLeaderboard();
+  // Top5 區塊
+  players.slice(0, 5).forEach((p, i) => {
+    const tr = document.createElement("tr");
+    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1;
+    tr.innerHTML = `<td>${medal}</td><td>${p.name}</td><td>${p.score}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // 省略符號
+  const ellipsis = document.createElement("tr");
+  ellipsis.className = "ellipsis";
+  ellipsis.innerHTML = "<td colspan='3'>...</td>";
+  tbody.appendChild(ellipsis);
+
+  // 倒數3名
+  players.slice(-3).forEach((p, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${players.length - 2 + idx}</td><td>${p.name}</td><td>${p.score}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// 模擬分數變化（每 2 秒更新）
+function randomUpdate() {
+  const randomPlayer = players[Math.floor(Math.random() * players.length)];
+  randomPlayer.score += Math.floor(Math.random() * 5 - 2); // ±2 範圍內波動
+  if (randomPlayer.score < 0) randomPlayer.score = 0;
+  renderLeaderboard();
+}
+
+setInterval(randomUpdate, 2000);
+renderLeaderboard();
+</script>
+
+<script>
+// ----------------------
+// 🗺️ Leaflet 地圖初始化（七節點）
+// ----------------------
+
+const map = L.map('map').setView([25.033, 121.5654], 15); // 台北101 為中心點
+
+// 使用自訂背景圖（請自行替換 /assets/34285548_094653522129_2.jpg）
+L.tileLayer('/assets/34285548_094653522129_2.jpg', {
+  minZoom: 1,
+  maxZoom: 4,
+  attribution: '© Wedding Map',
+}).addTo(map);
+
+// 隨機模擬七個節點（六關 + 彩蛋 🎁）
+const points = [
+  { name: "關卡一", coords: [25.034, 121.564], color: "red" },
+  { name: "關卡二", coords: [25.033, 121.566], color: "orange" },
+  { name: "關卡三", coords: [25.032, 121.565], color: "yellow" },
+  { name: "關卡四", coords: [25.0345, 121.567], color: "green" },
+  { name: "關卡五", coords: [25.035, 121.563], color: "blue" },
+  { name: "關卡六", coords: [25.0335, 121.562], color: "purple" },
+  { name: "🎁 彩蛋", coords: [25.0325, 121.5665], color: "pink" }
+];
+
+// 建立可拖曳標記
+points.forEach(p => {
+  const marker = L.circleMarker(p.coords, {
+    radius: 10,
+    color: p.color,
+    fillColor: p.color,
+    fillOpacity: 0.8,
+    draggable: true
+  }).addTo(map);
+  marker.bindTooltip(p.name, {permanent: false});
 });
 
-// === 🔊 音效 ===
-function preloadSounds() {
-  const files = {
-    beep: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
-    success: "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg",
-    clear: "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg",
-    correct: "https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg",
-    error: "https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg",
-    bonus: "https://actions.google.com/sounds/v1/cartoon/concussive_drum_hit.ogg",
-    mystery: "https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"
-  };
-  for (const [k, v] of Object.entries(files)) {
-    const a = new Audio(v);
-    a.volume = 0.5;
-    sounds[k] = a;
-  }
-}
-function playSound(name) {
-  if (sounds[name]) {
-    sounds[name].currentTime = 0;
-    sounds[name].play().catch(()=>{});
-  }
-}
-
-// === 📍 任務流程 ===
-async function signin() {
-  try {
-    const res = await fetch(API_BASE + "?action=signin", {
-      method: "POST",
-      body: JSON.stringify({ nickname }),
-      headers: { "Content-Type": "application/json" }
-    });
-    const data = await res.json();
-    console.log("登入結果", data);
-  } catch (e) { console.warn(e); }
-}
-
-function nextStep(step) {
-  playSound("beep");
-  document.getElementById("step" + step).classList.add("hidden");
-  const next = step + 1;
-  if (next <= 6) {
-    document.getElementById("step" + next).classList.remove("hidden");
-    glowMarker(next);
-    currentStep = next;
-    localStorage.setItem("wedding_progress", currentStep);
-    playSound("success");
-  } else {
-    document.getElementById("done").classList.remove("hidden");
-    playSound("clear");
-    currentStep = 7;
-    localStorage.setItem("wedding_progress", currentStep);
-  }
-}
-
-function showStep(step) {
-  for (let i=1; i<=6; i++) {
-    document.getElementById("step"+i).classList.add("hidden");
-  }
-  if (step <= 6) document.getElementById("step"+step).classList.remove("hidden");
-  else document.getElementById("done").classList.remove("hidden");
-}
-
-// === 🗺️ 地圖 ===
-function initMap() {
-  map = L.map('map', { zoomControl: false, minZoom: 0, maxZoom: 4, crs: L.CRS.Simple });
-  const bounds = [[0,0],[1000,1000]];
-  const image = L.imageOverlay('https://upload.wikimedia.org/wikipedia/commons/6/6c/BlankMap-World-v2.png', bounds).addTo(map);
-  map.fitBounds(bounds);
-  const nodes = [
-    {id:1, name:"簽到", x:200, y:200},
-    {id:2, name:"簽名", x:400, y:250},
-    {id:3, name:"找招待", x:600, y:300},
-    {id:4, name:"拍照", x:800, y:350},
-    {id:5, name:"拼圖", x:500, y:600},
-    {id:6, name:"測驗", x:700, y:700},
-    {id:7, name:"彩蛋 🎁", x:300, y:700}
-  ];
-  nodes.forEach(n => {
-    const status = n.id < currentStep ? "✅" : (n.id === currentStep ? "▶️" : "🔒");
-    const marker = L.marker(map.unproject([n.x, n.y], map.getMaxZoom()), {
-      title: n.name
-    }).addTo(map).bindTooltip(`${status} ${n.name}`, {permanent:true, direction:"top"});
-    markers[n.id] = marker;
-  });
-}
-function glowMarker(id) {
-  const m = markers[id];
-  if (!m) return;
-  const el = m.getElement();
-  if (!el) return;
-  el.classList.add("glow");
-  setTimeout(()=>el.classList.remove("glow"), 700);
-}
-
-// === 🏆 排行榜 ===
-let leaderboard = [];
-function initLeaderboard() {
-  renderLeaderboard();
-}
-function loopLeaderboard() {
-  setInterval(updateLeaderboard, 2000);
-}
-function renderLeaderboard() {
-  const list = document.getElementById("leaderList");
-  list.innerHTML = "";
-  leaderboard.forEach((p,i)=>{
-    const div = document.createElement("div");
-    div.className = "leader-item" + (p.name===nickname?" leader-self":"");
-    div.innerHTML = `<span>${i+1}. ${p.name}</span><span>${p.score}</span>`;
-    list.appendChild(div);
-  });
-}
-function fakeLeaderboardData() {
-  const names = ["Tester","Alice","Bob","Carol","David","Emma","Frank","Grace","Henry","Ivy"];
-  return names.map(n=>({ name:n, score: Math.floor(Math.random()*200)+50 }));
-}
-function updateLeaderboard() {
-  const newData = fakeLeaderboardData().sort((a,b)=>b.score-a.score);
-  const myIndex = newData.findIndex(p=>p.name===nickname);
-  const myRank = myIndex+1;
-  if (lastRank && myRank !== lastRank) {
-    showRankChange(myRank < lastRank ? "up" : "down");
-  }
-  lastRank = myRank;
-  leaderboard = newData;
-  renderLeaderboard();
-}
-function showRankChange(dir) {
-  const el = document.getElementById("rankChange");
-  el.textContent = dir==="up" ? "🎉 上升一位！" : "😅 被推下去一位...";
-  el.style.display = "block";
-  setTimeout(()=>el.style.display="none", 2000);
-}
-
-// === 🏁 彩蛋觸發示意 ===
-function triggerEgg(type) {
-  playSound(type==="bonus"?"bonus":"mystery");
-  alert(type==="bonus"?"🎁 恭喜獲得額外5分！":"🔮 觸發隱藏任務！");
-}
-
-/* === 結尾 === */
 </script>
 </body>
 </html>
