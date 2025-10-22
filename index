@@ -1,9 +1,366 @@
-async function signin(nickname) {
-  const res = await fetch('https://script.google.com/macros/s/AKfycbxf6Tag1ZzrwrTph3hFaOAnmlXvbCfXwBmTegL6W8hV0ztEFy8KH4RN1ijdApr6OTzR/exec', {
-    method: 'POST',
-    body: JSON.stringify({ nickname }),
-    headers: { 'Content-Type': 'application/json' }
-  });
-  const data = await res.json();
-  console.log('回傳：', data);
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 解任務｜婚禮版</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+/* 🌟 全域樣式 */
+body {
+  margin: 0;
+  font-family: 'Noto Sans TC', sans-serif;
+  background: linear-gradient(135deg, #fffaf4, #ffe8d6);
+  color: #333;
+  overflow: hidden;
 }
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+/* 左主區 */
+#mainArea {
+  flex: 2;
+  padding: 20px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+h1 {
+  background: linear-gradient(90deg, #d4af37, #ff9a9e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 2.2em;
+  margin-bottom: 10px;
+}
+.step-card {
+  width: 90%;
+  max-width: 600px;
+  padding: 30px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 20px;
+  text-align: center;
+  transition: all 0.4s ease;
+}
+.step-card.hidden { display: none; }
+.step-card h2 {
+  color: #b8860b;
+  margin-bottom: 15px;
+}
+.step-card button {
+  background: linear-gradient(90deg, #ffd700, #ffb347);
+  border: none;
+  border-radius: 25px;
+  padding: 10px 24px;
+  font-size: 1.1em;
+  cursor: pointer;
+  color: #fff;
+  font-weight: bold;
+  transition: 0.3s;
+}
+.step-card button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px #ffb347;
+}
+
+/* 右區塊：排行榜 + 地圖 */
+#rightPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-left: 3px solid #f2d5a3;
+}
+
+/* 排行榜 */
+#leaderboard {
+  flex: 1;
+  background: #fff8f0;
+  padding: 15px;
+  overflow-y: auto;
+  border-bottom: 3px solid #f2d5a3;
+}
+#leaderboard h3 {
+  text-align: center;
+  color: #c68c1f;
+  margin-top: 0;
+}
+.leader-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 10px;
+  border-bottom: 1px dashed #f2d5a3;
+}
+.leader-self {
+  background: rgba(255, 215, 0, 0.2);
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+/* 名次浮動提示 */
+#rankChange {
+  position: fixed;
+  top: 20px;
+  right: 50%;
+  transform: translateX(50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #ffd700;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  display: none;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  z-index: 1000;
+  animation: fadeInOut 2s ease forwards;
+}
+@keyframes fadeInOut {
+  0% {opacity: 0; transform: translate(-50%, -10px);}
+  10% {opacity: 1; transform: translate(-50%, 0);}
+  90% {opacity: 1; transform: translate(-50%, 0);}
+  100% {opacity: 0; transform: translate(-50%, -10px);}
+}
+
+/* 地圖 */
+#map {
+  flex: 1;
+  height: 50%;
+}
+.leaflet-container {
+  border-radius: 0 0 10px 10px;
+}
+
+/* 漸層動畫光圈 */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);}
+  70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0);}
+  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);}
+}
+.glow {
+  animation: pulse 0.6s ease-out;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="mainArea">
+    <h1>🎵 婚禮互動任務</h1>
+    <div id="stepsContainer">
+      <div id="step1" class="step-card">
+        <h2>1️⃣ 簽到任務</h2>
+        <p>嗶 NFC 或點下方按鈕簽到</p>
+        <button onclick="nextStep(1)">簽到</button>
+      </div>
+      <div id="step2" class="step-card hidden">
+        <h2>2️⃣ 簽名任務</h2>
+        <p>上傳你的簽名或照片（此版本暫不需上傳）</p>
+        <button onclick="nextStep(2)">完成簽名</button>
+      </div>
+      <div id="step3" class="step-card hidden">
+        <h2>3️⃣ 找招待</h2>
+        <p>找招待確認後完成任務</p>
+        <button onclick="nextStep(3)">完成找招待</button>
+      </div>
+      <div id="step4" class="step-card hidden">
+        <h2>4️⃣ 找新人拍照</h2>
+        <p>與新人合照完成任務</p>
+        <button onclick="nextStep(4)">完成拍照</button>
+      </div>
+      <div id="step5" class="step-card hidden">
+        <h2>5️⃣ 相本桌拼圖</h2>
+        <p>完成拼圖挑戰！</p>
+        <button onclick="nextStep(5)">完成拼圖</button>
+      </div>
+      <div id="step6" class="step-card hidden">
+        <h2>6️⃣ 四選一測驗</h2>
+        <p>完成四題婚禮問答</p>
+        <button onclick="nextStep(6)">完成測驗</button>
+      </div>
+      <div id="done" class="step-card hidden">
+        <h2>🎉 恭喜完成所有任務！</h2>
+        <p>感謝參與婚禮互動～</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="rightPanel">
+    <div id="leaderboard">
+      <h3>🏆 排行榜</h3>
+      <div id="leaderList"></div>
+    </div>
+    <div id="map"></div>
+  </div>
+</div>
+
+<div id="rankChange"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+
+/* === 🎮 NFT × NFC 互動任務：JS 主程式 === */
+
+const API_BASE = "https://script.google.com/macros/s/AKfycbxWhBXokjK37fAJVmxsP0ho0CKaj6JAm6150C4HLfmFJ89v2xGwGhYR85yjwPaXcxU6og/exec";
+const nickname = "Tester";
+let currentStep = 1;
+let lastRank = null;
+let sounds = {};
+let map, markers = {};
+
+// 🕹️ 初始化
+window.addEventListener("DOMContentLoaded", async () => {
+  preloadSounds();
+  initMap();
+  initLeaderboard();
+  const saved = localStorage.getItem("wedding_progress");
+  if (saved) currentStep = parseInt(saved);
+  showStep(currentStep);
+  await signin();
+  loopLeaderboard();
+});
+
+// === 🔊 音效 ===
+function preloadSounds() {
+  const files = {
+    beep: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
+    success: "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg",
+    clear: "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg",
+    correct: "https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg",
+    error: "https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg",
+    bonus: "https://actions.google.com/sounds/v1/cartoon/concussive_drum_hit.ogg",
+    mystery: "https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"
+  };
+  for (const [k, v] of Object.entries(files)) {
+    const a = new Audio(v);
+    a.volume = 0.5;
+    sounds[k] = a;
+  }
+}
+function playSound(name) {
+  if (sounds[name]) {
+    sounds[name].currentTime = 0;
+    sounds[name].play().catch(()=>{});
+  }
+}
+
+// === 📍 任務流程 ===
+async function signin() {
+  try {
+    const res = await fetch(API_BASE + "?action=signin", {
+      method: "POST",
+      body: JSON.stringify({ nickname }),
+      headers: { "Content-Type": "application/json" }
+    });
+    const data = await res.json();
+    console.log("登入結果", data);
+  } catch (e) { console.warn(e); }
+}
+
+function nextStep(step) {
+  playSound("beep");
+  document.getElementById("step" + step).classList.add("hidden");
+  const next = step + 1;
+  if (next <= 6) {
+    document.getElementById("step" + next).classList.remove("hidden");
+    glowMarker(next);
+    currentStep = next;
+    localStorage.setItem("wedding_progress", currentStep);
+    playSound("success");
+  } else {
+    document.getElementById("done").classList.remove("hidden");
+    playSound("clear");
+    currentStep = 7;
+    localStorage.setItem("wedding_progress", currentStep);
+  }
+}
+
+function showStep(step) {
+  for (let i=1; i<=6; i++) {
+    document.getElementById("step"+i).classList.add("hidden");
+  }
+  if (step <= 6) document.getElementById("step"+step).classList.remove("hidden");
+  else document.getElementById("done").classList.remove("hidden");
+}
+
+// === 🗺️ 地圖 ===
+function initMap() {
+  map = L.map('map', { zoomControl: false, minZoom: 0, maxZoom: 4, crs: L.CRS.Simple });
+  const bounds = [[0,0],[1000,1000]];
+  const image = L.imageOverlay('https://upload.wikimedia.org/wikipedia/commons/6/6c/BlankMap-World-v2.png', bounds).addTo(map);
+  map.fitBounds(bounds);
+  const nodes = [
+    {id:1, name:"簽到", x:200, y:200},
+    {id:2, name:"簽名", x:400, y:250},
+    {id:3, name:"找招待", x:600, y:300},
+    {id:4, name:"拍照", x:800, y:350},
+    {id:5, name:"拼圖", x:500, y:600},
+    {id:6, name:"測驗", x:700, y:700},
+    {id:7, name:"彩蛋 🎁", x:300, y:700}
+  ];
+  nodes.forEach(n => {
+    const status = n.id < currentStep ? "✅" : (n.id === currentStep ? "▶️" : "🔒");
+    const marker = L.marker(map.unproject([n.x, n.y], map.getMaxZoom()), {
+      title: n.name
+    }).addTo(map).bindTooltip(`${status} ${n.name}`, {permanent:true, direction:"top"});
+    markers[n.id] = marker;
+  });
+}
+function glowMarker(id) {
+  const m = markers[id];
+  if (!m) return;
+  const el = m.getElement();
+  if (!el) return;
+  el.classList.add("glow");
+  setTimeout(()=>el.classList.remove("glow"), 700);
+}
+
+// === 🏆 排行榜 ===
+let leaderboard = [];
+function initLeaderboard() {
+  renderLeaderboard();
+}
+function loopLeaderboard() {
+  setInterval(updateLeaderboard, 2000);
+}
+function renderLeaderboard() {
+  const list = document.getElementById("leaderList");
+  list.innerHTML = "";
+  leaderboard.forEach((p,i)=>{
+    const div = document.createElement("div");
+    div.className = "leader-item" + (p.name===nickname?" leader-self":"");
+    div.innerHTML = `<span>${i+1}. ${p.name}</span><span>${p.score}</span>`;
+    list.appendChild(div);
+  });
+}
+function fakeLeaderboardData() {
+  const names = ["Tester","Alice","Bob","Carol","David","Emma","Frank","Grace","Henry","Ivy"];
+  return names.map(n=>({ name:n, score: Math.floor(Math.random()*200)+50 }));
+}
+function updateLeaderboard() {
+  const newData = fakeLeaderboardData().sort((a,b)=>b.score-a.score);
+  const myIndex = newData.findIndex(p=>p.name===nickname);
+  const myRank = myIndex+1;
+  if (lastRank && myRank !== lastRank) {
+    showRankChange(myRank < lastRank ? "up" : "down");
+  }
+  lastRank = myRank;
+  leaderboard = newData;
+  renderLeaderboard();
+}
+function showRankChange(dir) {
+  const el = document.getElementById("rankChange");
+  el.textContent = dir==="up" ? "🎉 上升一位！" : "😅 被推下去一位...";
+  el.style.display = "block";
+  setTimeout(()=>el.style.display="none", 2000);
+}
+
+// === 🏁 彩蛋觸發示意 ===
+function triggerEgg(type) {
+  playSound(type==="bonus"?"bonus":"mystery");
+  alert(type==="bonus"?"🎁 恭喜獲得額外5分！":"🔮 觸發隱藏任務！");
+}
+
+/* === 結尾 === */
+</script>
+</body>
+</html>
