@@ -6,78 +6,60 @@
 <title>🎵 婚禮互動任務 Final Demo</title>
 
 <!-- =========================================================
-<======== 檔案用途：婚禮互動任務（六關主區 + 排行榜 + 地圖 完整版） ======== >
+<======== 檔案用途：婚禮互動任務（六關 + 彩蛋 + 排行榜 + 地圖） ======== >
 ========================================================= -->
 
 <style>
-/* ---------------------------------------------
-   //* --------配色／字級設定區（可自行調整；新增）--------*//
---------------------------------------------- */
 :root {
-  --font-base: 22px;    /* 主要說明文字大小 */
-  --font-lg: 30px;      /* 區塊標題字體大小 */
-  --font-xl: 40px;      /* 主標題字體大小 */
-  --muted: #6b7280;     /* 次要說明文字顏色 */
-  --ink: #111827;       /* 主文字顏色 */
-  --card-w: 880px;      /* 主卡片寬度 */
-  --top-banner: 120px;  /* 上半主活動區高度 */
+  --font-base: 22px;
+  --font-lg: 30px;
+  --font-xl: 40px;
+  --muted: #6b7280;
+  --ink: #111827;
+  --card-w: 880px;
 }
-
-/* 主背景（柔金漸層） */
 body {
   margin: 0;
   font-family: 'Noto Sans TC', sans-serif;
-  background: linear-gradient(180deg, rgba(247, 216, 104, 1) 0%, rgba(209, 187, 144, 1) 50%, rgba(184, 169, 169, 1) 100%);
+  background: linear-gradient(180deg, rgba(247,216,104,1) 0%, rgba(209,187,144,1) 50%, rgba(184,169,169,1) 100%);
   overflow: hidden;
   color: var(--ink);
 }
-
-/* 主容器 */
-#app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-/* 上半：婚禮主活動卡片 */
+#app { display: flex; flex-direction: column; height: 100vh; }
 #main-area {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
 .main-card {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255,255,255,0.9);
   border-radius: 24px;
   box-shadow: 0 0 20px rgba(255,255,255,0.5);
   text-align: center;
   width: var(--card-w);
   padding: 30px 20px;
   backdrop-filter: blur(6px);
-  animation: fadeIn 1.2s ease-in-out;
+  transition: all 0.6s ease;
 }
-.main-card h1 {
-  font-size: var(--font-xl);
-  margin: 10px 0;
-}
-.main-card p {
+.main-card h1 { font-size: var(--font-xl); margin: 10px 0; }
+.main-card p { font-size: var(--font-base); color: var(--muted); }
+button {
+  background-color: #ffb703;
+  border: none;
+  border-radius: 10px;
+  color: #111;
   font-size: var(--font-base);
-  color: var(--muted);
+  padding: 10px 25px;
+  cursor: pointer;
+  margin-top: 15px;
 }
-@keyframes fadeIn {
-  from {opacity:0; transform:translateY(20px);}
-  to {opacity:1; transform:translateY(0);}
-}
-
-/* 下半：排行榜＋地圖 */
+button:hover { background-color: #ffd166; }
 #bottom-area {
   display: flex;
   height: 45%;
   border-top: 4px solid #fff;
 }
-
-/* 排行榜 */
 #leaderboard {
   flex: 1;
   background: linear-gradient(180deg,rgba(169,169,235,1) 0%, rgba(158,224,255,1) 77%, rgba(0,212,255,1) 100%);
@@ -96,55 +78,28 @@ table {
   font-size: 18px;
   color: #111;
 }
-th, td {
-  text-align: center;
-  padding: 6px;
-}
-th {
-  background-color: rgba(255, 255, 255, 0.4);
-}
-tr:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-.rank-medal {
-  font-size: 24px;
-}
-.ellipsis td {
-  text-align: center;
-  color: #555;
-  font-style: italic;
-}
-.flash {
-  animation: flash 0.8s ease-in-out;
-}
-@keyframes flash {
-  0% { background-color: #fffacd; }
-  100% { background-color: transparent; }
-}
-
-/* 地圖 */
+th, td { text-align: center; padding: 6px; }
+th { background-color: rgba(255,255,255,0.4); }
+tr:nth-child(even) { background-color: rgba(255,255,255,0.2); }
+.ellipsis td { text-align: center; color: #555; font-style: italic; }
 #map {
   flex: 1;
   height: 100%;
   border-left: 4px solid #fff;
 }
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-}
+.leaflet-container { width: 100%; height: 100%; }
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- 上半主活動區 -->
   <div id="main-area">
-    <div class="main-card">
+    <div class="main-card" id="mission-card">
       <h1>🎵 婚禮互動任務</h1>
-      <p>🎉 恭喜完成所有任務！<br>可前往排行榜查看名次或探索地圖中的彩蛋 🎁</p>
+      <p>歡迎參加婚禮任務活動～<br>請點擊開始進行挑戰！</p>
+      <button onclick="nextMission()">開始任務 ▶</button>
     </div>
   </div>
 
-  <!-- 下半：排行榜 + 地圖 -->
   <div id="bottom-area">
     <div id="leaderboard">
       <h2>🏆 排行榜</h2>
@@ -157,16 +112,35 @@ tr:nth-child(even) {
   </div>
 </div>
 
-<!-- Leaflet 套件 -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 // ----------------------
+// 🏁 六關任務流程
+// ----------------------
+let step = 0;
+const missions = [
+  "1️⃣ 簽到：請完成簽到並輸入暱稱！",
+  "2️⃣ 簽名：請上傳您的簽名或照片！",
+  "3️⃣ 找招待：請找到現場工作人員確認～",
+  "4️⃣ 找新人拍照：與新人合照一張 📸",
+  "5️⃣ 相本桌拼圖：完成小遊戲獲得分數～",
+  "6️⃣ 四選一：回答婚禮小測驗 💡"
+];
+function nextMission() {
+  const card = document.getElementById("mission-card");
+  if (step < missions.length) {
+    card.innerHTML = `<h1>🎯 第 ${step+1} 關</h1><p>${missions[step]}</p><button onclick="nextMission()">下一關 ▶</button>`;
+    step++;
+  } else {
+    card.innerHTML = `<h1>🎉 恭喜完成所有任務！</h1><p>感謝參與婚禮互動～</p>`;
+  }
+}
+
+// ----------------------
 // 🏆 排行榜模擬邏輯
 // ----------------------
-
-// 模擬初始玩家資料
 let players = [
   {name: "Tester", score: 100},
   {name: "Alice", score: 95},
@@ -179,84 +153,98 @@ let players = [
   {name: "Heidi", score: 60},
   {name: "Ivan", score: 55}
 ];
-
-// 排行榜渲染函式
 function renderLeaderboard() {
   players.sort((a, b) => b.score - a.score);
   const tbody = document.getElementById("rank-body");
   tbody.innerHTML = "";
-
-  // Top5 區塊
   players.slice(0, 5).forEach((p, i) => {
-    const tr = document.createElement("tr");
-    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1;
-    tr.innerHTML = `<td>${medal}</td><td>${p.name}</td><td>${p.score}</td>`;
-    tbody.appendChild(tr);
+    const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1;
+    tbody.innerHTML += `<tr><td>${medal}</td><td>${p.name}</td><td>${p.score}</td></tr>`;
   });
-
-  // 省略符號
-  const ellipsis = document.createElement("tr");
-  ellipsis.className = "ellipsis";
-  ellipsis.innerHTML = "<td colspan='3'>...</td>";
-  tbody.appendChild(ellipsis);
-
-  // 倒數3名
-  players.slice(-3).forEach((p, idx) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${players.length - 2 + idx}</td><td>${p.name}</td><td>${p.score}</td>`;
-    tbody.appendChild(tr);
+  tbody.innerHTML += "<tr class='ellipsis'><td colspan='3'>...</td></tr>";
+  players.slice(-3).forEach((p,i)=>{
+    tbody.innerHTML += `<tr><td>${players.length-2+i}</td><td>${p.name}</td><td>${p.score}</td></tr>`;
   });
 }
-
-// 模擬分數變化（每 2 秒更新）
-function randomUpdate() {
-  const randomPlayer = players[Math.floor(Math.random() * players.length)];
-  randomPlayer.score += Math.floor(Math.random() * 5 - 2); // ±2 範圍內波動
-  if (randomPlayer.score < 0) randomPlayer.score = 0;
+setInterval(()=>{
+  const randomPlayer = players[Math.floor(Math.random()*players.length)];
+  randomPlayer.score += Math.floor(Math.random()*5-2);
+  if(randomPlayer.score<0) randomPlayer.score=0;
   renderLeaderboard();
-}
-
-setInterval(randomUpdate, 2000);
+},2000);
 renderLeaderboard();
-</script>
 
-<script>
 // ----------------------
-// 🗺️ Leaflet 地圖初始化（七節點）
+// 🗺️ Leaflet 地圖初始化（平面模式，等比例顯示）
 // ----------------------
-
-const map = L.map('map').setView([25.033, 121.5654], 15); // 台北101 為中心點
-
-// 使用自訂背景圖（請自行替換 /assets/WL-平面場圖-4.png）
-L.tileLayer('/assets/WL-平面場圖-4.png', {
-  minZoom: 1,
-  maxZoom: 4,
-  attribution: '© Wedding Map',
-}).addTo(map);
-
-// 隨機模擬七個節點（六關 + 彩蛋 🎁）
-const points = [
-  { name: "關卡一", coords: [25.034, 121.564], color: "red" },
-  { name: "關卡二", coords: [25.033, 121.566], color: "orange" },
-  { name: "關卡三", coords: [25.032, 121.565], color: "yellow" },
-  { name: "關卡四", coords: [25.0345, 121.567], color: "green" },
-  { name: "關卡五", coords: [25.035, 121.563], color: "blue" },
-  { name: "關卡六", coords: [25.0335, 121.562], color: "purple" },
-  { name: "🎁 彩蛋", coords: [25.0325, 121.5665], color: "pink" }
-];
-
-// 建立可拖曳標記
-points.forEach(p => {
-  const marker = L.circleMarker(p.coords, {
-    radius: 10,
-    color: p.color,
-    fillColor: p.color,
-    fillOpacity: 0.8,
-    draggable: true
-  }).addTo(map);
-  marker.bindTooltip(p.name, {permanent: false});
+const map = L.map('map', {
+  crs: L.CRS.Simple,
+  minZoom: -1,
+  maxZoom: 2,
+  zoomSnap: 0.1,
+  attributionControl: false
 });
 
+// 載入圖片
+const imageUrl = 'assets/WL-平面場圖-4.png';
+const img = new Image();
+img.src = imageUrl;
+
+img.onload = function() {
+  const w = img.width;
+  const h = img.height;
+  const aspect = w / h;
+
+  // 地圖容器比例
+  const mapW = map.getContainer().clientWidth;
+  const mapH = map.getContainer().clientHeight;
+  const mapAspect = mapW / mapH;
+
+  // 根據比例計算縮放範圍（避免變形）
+  let bounds;
+  if (aspect > mapAspect) {
+    // 圖片較寬 → 留上下空白
+    const newH = w / mapAspect;
+    bounds = [[0, 0], [newH, w]];
+  } else {
+    // 圖片較高 → 留左右空白
+    const newW = h * mapAspect;
+    bounds = [[0, 0], [h, newW]];
+  }
+
+  // 顯示圖片
+  L.imageOverlay(imageUrl, [[0, 0], [h, w]]).addTo(map);
+
+  // 地圖顯示範圍為原始圖範圍（非強制拉滿）
+  map.fitBounds([[0, 0], [h, w]], {padding: [0, 0], animate: false});
+
+  // 💍 浮水印
+  L.control.attribution({prefix: false})
+   .addAttribution('💍 MYs Map © 2025-10')
+   .addTo(map);
+
+  // 節點（維持小點）
+  const points = [
+    { name: "關卡", coords: [h*0.45, w*0.45], color: "red" },
+    { name: "關卡", coords: [h*0.35, w*0.7], color: ""red" },
+    { name: "關卡", coords: [h*0.55, w*0.3], color: ""red" },
+    { name: "關卡", coords: [h*0.25, w*0.8], color: ""red" },
+    { name: "關卡", coords: [h*0.2,  w*0.2], color: ""red" },
+    { name: "關卡", coords: [h*0.4,  w*0.1], color: ""red" },
+    { name: "🎁 Bonus ", coords: [h*0.55, w*0.65], color: "gold" },
+    { name: "🎁 Bonus ", coords: [h*0.4,  w*0.6], color: "gold" },
+    { name: "🎁 Bonus ", coords: [h*0.75, w*0.5], color: "gold" }
+  ];
+  points.forEach(p => {
+    const m = L.circleMarker([p.coords[0], p.coords[1]], {
+      radius: 5,
+      color: p.color,
+      fillColor: p.color,
+      fillOpacity: 0.85
+    }).addTo(map);
+    m.bindTooltip(p.name, { direction: 'top', offset: [0, -4] });
+  });
+};
 </script>
 </body>
 </html>
