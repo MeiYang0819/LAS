@@ -1,0 +1,9 @@
+async function signin(nickname) {
+  const res = await fetch('https://script.google.com/macros/s/AKfycbxf6Tag1ZzrwrTph3hFaOAnmlXvbCfXwBmTegL6W8hV0ztEFy8KH4RN1ijdApr6OTzR/exec', {
+    method: 'POST',
+    body: JSON.stringify({ nickname }),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  const data = await res.json();
+  console.log('回傳：', data);
+}
